@@ -10,4 +10,22 @@ import scrapy
 
 class RealestateItem(scrapy.Item):
     # define the fields for your item here like:
+    state = scrapy.Field()
+    city = scrapy.Field()
+    neighborhood = scrapy.Field()
+    zip_code = scrapy.Field()
+    listing_type = scrapy.Field()
+    property_type = scrapy.Field()
+    construction = scrapy.Field()
+    lot = scrapy.Field()
+    mls_number = scrapy.Field()
+    parcel = scrapy.Field()
+    price = scrapy.Field()
+    zestimate = scrapy.Field()
+    zestimate_rent = scrapy.Field()
+    built_in = scrapy.Field()
+    bedrooms = scrapy.Field()
+    baths = scrapy.Field()
     address = scrapy.Field()
+    url = scrapy.Field()
+    timestamp = scrapy.Field()
