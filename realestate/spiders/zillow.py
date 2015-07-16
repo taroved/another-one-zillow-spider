@@ -17,10 +17,10 @@ class ZillowSpider(scrapy.Spider):
     name = "zillow"
     allowed_domains = ["zillow.com"]
     start_urls = (
-        #(
-        #    'http://www.zillow.com/homes/Orlando-FL_rb/',
-        #    'http://www.zillow.com/search/GetResults.htm?spt=homes&status=110011&lt=111101&ht=111111&pr=,&mp=,&bd=0%2C&ba=0%2C&sf=,&lot=,&yr=,&pho=0&pets=0&parking=0&laundry=0&pnd=1&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&zoom=10&rect=-81814842,28313146,-80922203,28648114&p=1&sort=featured&search=list&disp=1&rid=13121&rt=6&listright=true&isMapSearch=0&zoom=10'
-        #),
+        (
+            'http://www.zillow.com/homes/Orlando-FL_rb/',
+            'http://www.zillow.com/search/GetResults.htm?spt=homes&status=110011&lt=111101&ht=111111&pr=,&mp=,&bd=0%2C&ba=0%2C&sf=,&lot=,&yr=,&pho=0&pets=0&parking=0&laundry=0&pnd=1&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&zoom=10&rect=-81814842,28313146,-80922203,28648114&p=1&sort=featured&search=list&disp=1&rid=13121&rt=6&listright=true&isMapSearch=0&zoom=10'
+        ),
         #(
         #    'http://www.zillow.com/homes/Tampa-FL_rb/',
         #    'http://www.zillow.com/search/GetResults.htm?spt=homes&status=110011&lt=111101&ht=111111&pr=,&mp=,&bd=0%2C&ba=0%2C&sf=,&lot=,&yr=,&pho=0&pets=0&parking=0&laundry=0&pnd=0&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&zoom=10&rect=-82900429,27873983,-82007790,28118319&p=1&sort=featured&search=maplist&disp=1&rid=41176&rt=6&listright=true&isMapSearch=1&zoom=10',
@@ -33,14 +33,14 @@ class ZillowSpider(scrapy.Spider):
         #    'http://www.zillow.com/homes/St.-Petersburg-FL_rb/',
         #    'http://www.zillow.com/search/GetResults.htm?spt=homes&status=110011&lt=111101&ht=111111&pr=,&mp=,&bd=0%2C&ba=0%2C&sf=,&lot=,&yr=,&pho=0&pets=0&parking=0&laundry=0&pnd=0&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&zoom=10&rect=-83100930,27617231,-82208291,27937393&p=2&sort=featured&search=list&disp=1&rid=26922&rt=6&listright=true&isMapSearch=false&zoom=10',
         #),
-        (
-            'http://www.zillow.com/homes/jacksonville-FL_rb/',
-            'http://www.zillow.com/search/GetResults.htm?spt=homes&status=110011&lt=111101&ht=111111&pr=,&mp=,&bd=0%2C&ba=0%2C&sf=,&lot=,&yr=,&pho=0&pets=0&parking=0&laundry=0&pnd=0&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&zoom=9&rect=-82575303,30032244,-80790024,30656815&p=2&sort=featured&search=list&disp=1&rid=25290&rt=6&listright=true&isMapSearch=false&zoom=9',
-        ),
+        #(
+        #    'http://www.zillow.com/homes/jacksonville-FL_rb/',
+        #    'http://www.zillow.com/search/GetResults.htm?spt=homes&status=110011&lt=111101&ht=111111&pr=,&mp=,&bd=0%2C&ba=0%2C&sf=,&lot=,&yr=,&pho=0&pets=0&parking=0&laundry=0&pnd=0&red=0&zso=0&days=any&ds=all&pmf=1&pf=1&zoom=9&rect=-82575303,30032244,-80790024,30656815&p=2&sort=featured&search=list&disp=1&rid=25290&rt=6&listright=true&isMapSearch=false&zoom=9',
+        #),
     )
     
-    prices = ((0, 1000), (1000, 25000), (25000, 35000), (35000, 50000), (50000, 60000), (60000, 70000),  (70000, 80000), (80000, 90000), (90000, 100000),
-              (100000, 110000), (110000, 120000), (120000, 130000), (130000, 140000), (140000, 150000), (150000, 160000), (160000, 170000), (170000, 180000), (180000, 190000), (190000, 200000),
+    prices = ((0, 1000), (1001, 25000), (25001, 35000), (35001, 50000), (50001, 60000), (60001, 70000),  (70001, 80000), (80001, 90000), (90001, 100000),
+              (100001, 110000), (110001, 120000), (120001, 130000), (130001, 140000), (140001, 150000), (150001, 160000), (160001, 170000), (170001, 180000), (180001, 190000), (190001, 200000),
               (2000001, 20000000))    
     meta_url_tpl = 'zillow_url_tpl'
     meta_loader = 'zillow_loader'
@@ -48,19 +48,20 @@ class ZillowSpider(scrapy.Spider):
     site_path = 'http://www.zillow.com'
 
     def start_requests(self):
-        for url in self.start_urls:
-            yield Request(url[0],  meta={self.meta_url_tpl: url[1]},
-                          callback=self.parse_pages)
+        for start_url in self.start_urls:
+            u = url.add_or_replace_parameter(start_url[1], 'p', 1) # page
+            for price in self.prices:
+                u = url.add_or_replace_parameter(u, 'pr', ",".join([str(p) for p in price])) 
+                yield Request(u, callback=self.parse_pages_json)
 
-    def parse_pages(self, response):
+    def parse_pages_json(self, response):
         # get count of pages
-        page_count = int(response.xpath(
-            '(//*[@id="search-pagination-wrapper"]//a[boolean(number(.))]/text())[last()]').extract()[0])
+        j_response = json.loads(response.body_as_unicode())
+        page_count = int(j_response["list"]["numPages"])
 
         # open pages
-        # for page in xrange(page_count - 1):
-        for page in xrange(1):
-            yield Request(url.add_or_replace_parameter(response.meta[self.meta_url_tpl], 'p', page), callback=self.parse_page_json)
+        for page in xrange(page_count - 1):
+            yield Request(url.add_or_replace_parameter(response.url, 'p', page), callback=self.parse_page_json)
 
     def parse_page_json(self, response):
         j_response = json.loads(response.body_as_unicode())
@@ -82,7 +83,7 @@ class ZillowSpider(scrapy.Spider):
         l = ZillowProcessor(response=response)
         l.selector = Selector(response)
         l.add_value('state', 'FL')
-        l.add_value('city', 'Jacksonville')
+        l.add_value('city', 'Orlando')
         l.add_xpath('neighborhood', '//h2/text()', re=r"Neighborhood: (.*)")
         l.add_xpath('zip_code', '(//h1)[1]/span/text()', re=r"(\d+)$")
         l.add_value('listing_type', 'For Sale')
@@ -96,7 +97,10 @@ class ZillowSpider(scrapy.Spider):
         l.add_xpath(
             'mls_number', '//h4[text()="Facts"]/..//li/text()', re=r"MLS #: (\S+)")
         l.add_value('mls_number', 'na')
-        l.add_value('parcel', '//li/text()', re=r"Parcel #: (\d+)")
+        
+        #import pdb
+        #pdb.set_trace()
+        l.add_xpath('parcel', '//li[starts-with(.,"Parcel #: ")]/text()', re=r"Parcel #: (\d+)")
         l.add_value('parcel', 'na')
         l.add_xpath(
             'price', '//*[@class="estimates"]//*[contains(@class,"main-row")]/span/text()')
@@ -121,8 +125,6 @@ class ZillowSpider(scrapy.Spider):
     def parse_listing_provided_by(self, response):
         l = response.meta[self.meta_loader]
 
-        #import pdb
-        #pdb.set_trace()
         j_response = json.loads(response.body_as_unicode())
         html = j_response["html"]
         resp = HtmlResponse(response.url, body=html.encode('utf8'), encoding='utf8')

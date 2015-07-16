@@ -21,7 +21,7 @@ class CSVPipeline(object):
         return pipeline
 
     def spider_opened(self, spider):
-        file = open('%s_FL_Jacksonville_20150715_featured.csv' % spider.name, 'w+b')
+        file = open('%s_FL_Orlando_20150716.csv' % spider.name, 'w+b')
         self.files[spider] = file
         self.exporter = CsvItemExporter(file)
         self.exporter.fields_to_export = ['state', 'city', 'neighborhood', 'zip_code', 'listing_type', 'property_type', 'construction', 'lot',
