@@ -11,5 +11,5 @@ class ZillowProcessor(ItemLoader):
     
     default_output_processor = TakeFirst()
     
-    
-    
+    description_out = Join(' ')
+    listing_provided_by_out = Compose(Join(''), lambda x: x.strip())

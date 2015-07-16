@@ -28,4 +28,6 @@ class RealestateItem(scrapy.Item):
     baths = scrapy.Field()
     address = scrapy.Field()
     url = scrapy.Field()
+    description = scrapy.Field()
+    listing_provided_by = scrapy.Field()
     timestamp = scrapy.Field()
